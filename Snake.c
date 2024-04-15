@@ -25,11 +25,12 @@ typedef struct frut{
 }frut;
 	
 typedef enum {
-	STOP = 0,
+	PAUSE = 0,
 	UP,
 	DOWN,
 	LEFT,
-	RIGHT
+	RIGHT,
+	STOP
 	} direction;
 
 struct snake_t Setup(int x, int y, size_t tsize) // Базовые установки
@@ -39,6 +40,11 @@ struct snake_t Setup(int x, int y, size_t tsize) // Базовые устано�
 	snake.y = y;
 	snake.tsize = tsize;
 	snake.tail = (tail_t *) malloc (sizeof(tail_t) * 100);
+	for(int i =0; i < snake.tsize; i++)
+	{
+		snake.tail[i].x = x;
+		snake.tail[i].y = y + i + 1;
+	}
 	return snake;
 }
 
@@ -54,27 +60,28 @@ void Input(direction *dir) {
     if(kbhit()) {
         switch(getch()) {
             case 'w':
-                *dir = UP;
-                break;
             case 'W':
                 *dir = UP;
                 break;
             case 's':
-                *dir = DOWN;
-                break;
             case 'S':
                 *dir = DOWN;
                 break;
             case 'a':
-                *dir = LEFT;
             case 'A':
                 *dir = LEFT;
                 break;
             case 'd':
-                *dir = RIGHT;
-                break;
             case 'D':
                 *dir = RIGHT;
+                break;
+            case 'p':
+            case 'P':
+                *dir = PAUSE;
+                break;
+            case 'c':
+            case 'C':
+                *dir = STOP;
                 break;
         }
     }
@@ -86,14 +93,20 @@ void Logic(snake_t *snake,frut *frut, direction dir) {
 		int prev2X, prev2Y;
 		snake->tail[0].x = snake->x;
 		snake->tail[0].y = snake->y;
+		
+		
 		for (int i = 1; i < snake->tsize; i++) {
+			if(dir != PAUSE)
+			{
 			prev2X = snake->tail[i].x;
 			prev2Y = snake->tail[i].y;
 			snake->tail[i].x = prevX;
 			snake->tail[i].y = prevY;
 			prevX = prev2X;
 			prevY = prev2Y;
+			}
 		}
+		
 
 		switch(dir)
 		{
@@ -108,6 +121,11 @@ void Logic(snake_t *snake,frut *frut, direction dir) {
 				break;
 			case DOWN:
 				snake->x++;
+				break;
+			case PAUSE:
+				break;
+			case STOP:
+				gameOver = 0;
 				break;
 		}
 
@@ -134,7 +152,7 @@ void Logic(snake_t *snake,frut *frut, direction dir) {
 	}
 }
 
-void Drow(snake_t *snake, frut *frut)
+void Drow(snake_t *snake, frut *frut, direction dir)
 {
 	system("cls");
 	for(int i = 0;i < WIDTH + 1;i++)    // Верхняя граница
@@ -171,20 +189,27 @@ void Drow(snake_t *snake, frut *frut)
 		printf("#");
 	printf("\n");
 	printf("Eat fruit:%lld",snake->tsize-1);
+	printf("\n");
+	if (dir == PAUSE) 
+	{
+	printf("**********PAUSE***********");
+	}
 }
 int main(int argc, char **argv)
 {
-	direction dir = STOP;
+	direction dir = LEFT;
 	gameOver = 1;
-	snake_t snake = Setup(WIDTH/2,HEIGHT/2,1);
+	snake_t snake = Setup(WIDTH/2,HEIGHT/2,4);
 	frut frut = Frut();
 	while(gameOver)
 	{
-		Drow(&snake,&frut);
+		Drow(&snake,&frut,dir);
 		Input(&dir);
 		Logic(&snake,&frut,dir);
-		Sleep(100);
+		Sleep(1000/snake.tsize);    //Скорость
 	}
+	printf("\n");
+	printf("GAME OVER!!!");
 	return 0;
 }
 
