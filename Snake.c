@@ -3,9 +3,13 @@
 #include <stdlib.h>
 #include <windows.h>
 
+
 #define WIDTH 20
 #define HEIGHT 20
 int gameOver;
+
+
+
 
 typedef struct tail_t{
 	int x;
@@ -56,7 +60,43 @@ struct frut Frut()
 	return frut;
 }
 
-void Input(direction *dir) {
+void startMenu(int *sel)
+{
+	int menu = 1;
+	while (menu)
+	{
+		printf("  #####                                 #     #      #####  \n");
+		printf(" #     # #    #   ##   #    # ######    #     #     #     # \n");
+		printf(" #       ##   #  #  #  #   #  #         #     #           # \n");
+		printf("  #####  # #  # #    # ####   #####     #     #      #####  \n");
+		printf("       # #  # # ###### #  #   #          #   #  ###       # \n");
+		printf(" #     # #   ## #    # #   #  #           # #   ### #     # \n");
+		printf("  #####  #    # #    # #    # ######       #    ###  #####  \n");
+		printf("************************************************************\n");
+		printf("*			Select menu:			   *\n");
+		printf("*			1.Player game.			   *\n");
+		printf("*			2.Auto game.			   *\n");
+		printf("************************************************************\n");
+		printf("To PAUSE the game, press P, to EXIT the game, press C.\n");
+		switch(getch())
+		{
+			case '1':
+			menu = 0;
+			*sel = 1;
+			break;
+			case '2':
+			menu = 0;
+			*sel = 2;
+			break;
+			default:
+			system("cls");
+			break;
+		}
+		
+	}
+}
+
+void Input(direction *dir, direction *dir2,direction *tmp1, direction *tmp2) {
     if(kbhit()) {
         switch(getch()) {
             case 'w':
@@ -75,17 +115,74 @@ void Input(direction *dir) {
             case 'D':
                 *dir = RIGHT;
                 break;
+            /*case 'i':
+            case 'I':
+                *dir2 = UP;
+                break;
+            case 'k':
+            case 'K':
+                *dir2 = DOWN;
+                break;
+            case 'j':
+            case 'J':
+                *dir2 = LEFT;
+                break;
+            case 'l':
+            case 'L':
+                *dir2 = RIGHT;
+                break;*/
             case 'p':
             case 'P':
-                *dir = PAUSE;
+                if(*dir != PAUSE && *dir2 != PAUSE)
+            {
+				*tmp1 = *dir;
+				*tmp2 = *dir2;
+				*dir = PAUSE;
+                *dir2 = PAUSE;
+			}
+			else
+			{
+				*dir = *tmp1;
+                *dir2 = *tmp2;
+			}
                 break;
             case 'c':
             case 'C':
                 *dir = STOP;
+                *dir2 = STOP;
                 break;
         }
     }
 }
+
+void InputAuto(direction *dir, direction *dir2, direction *tmp1, direction *tmp2) {
+	
+    if(kbhit()) {
+        switch(getch()) {
+            case 'p':
+            case 'P':
+            if(*dir != PAUSE && *dir2 != PAUSE)
+            {
+				*tmp1 = *dir;
+				*tmp2 = *dir2;
+				*dir = PAUSE;
+                *dir2 = PAUSE;
+			}
+			else
+			{
+				*dir = *tmp1;
+                *dir2 = *tmp2;
+			}
+                break;
+            case 'c':
+            case 'C':
+                *dir = STOP;
+                *dir2 = STOP;
+                break;
+        }
+    }
+}
+
 
 void Logic(snake_t *snake,frut *frut, direction dir) {
 		int prevX = snake->tail[0].x;
@@ -152,11 +249,15 @@ void Logic(snake_t *snake,frut *frut, direction dir) {
 	}
 }
 
-void Drow(snake_t *snake, frut *frut, direction dir)
+void Drow(snake_t *snake,snake_t *snake2, frut *frut, direction dir, direction dir2)
 {
+	HANDLE hwnd = GetStdHandle(STD_OUTPUT_HANDLE);
 	system("cls");
 	for(int i = 0;i < WIDTH + 1;i++)    // Верхняя граница
+	{
+		SetConsoleTextAttribute(hwnd, FOREGROUND_BLUE);
 		printf("#");
+	}
 	printf("\n");
 	
 	for(int i = 0;i < WIDTH; i++)
@@ -164,8 +265,21 @@ void Drow(snake_t *snake, frut *frut, direction dir)
 		for(int j = 0;j < HEIGHT; j++)
 		{
 			if(j == 0) printf("#");    //Левая граница
-			if (i == frut->x && j == frut->y)printf("O");  // фрукт
-			else if (snake->x == i && snake->y == j) printf("@");  // Башка
+			if (i == frut->x && j == frut->y)
+			{
+				SetConsoleTextAttribute(hwnd, FOREGROUND_RED);
+				printf("O");  // фрукт
+			}
+			else if (snake->x == i && snake->y == j)
+			{
+				SetConsoleTextAttribute(hwnd, FOREGROUND_GREEN);
+				 printf("@");  // Башка1
+			}
+			else if (snake2->x == i && snake2->y == j) 
+			{
+				SetConsoleTextAttribute(hwnd, FOREGROUND_BLUE);
+				printf("#");  // Башка2
+			}
 			else
 			{
 				size_t flag_t = 0;
@@ -173,14 +287,25 @@ void Drow(snake_t *snake, frut *frut, direction dir)
 				{
 					if (snake->tail[k].x == i && snake->tail[k].y == j)
 					{
+						SetConsoleTextAttribute(hwnd, FOREGROUND_GREEN);
 						printf("*");
+						flag_t = 1;
+					}
+					if (snake2->tail[k].x == i && snake2->tail[k].y == j)
+					{
+						SetConsoleTextAttribute(hwnd, FOREGROUND_BLUE);
+						printf("-");
 						flag_t = 1;
 					}
 				}
 			if(!flag_t) printf(" ");          //Все не занятое поле
 			} 
 			
-			if(j == WIDTH - 1) printf("#");
+			if(j == WIDTH - 1) 
+			{
+				SetConsoleTextAttribute(hwnd, FOREGROUND_BLUE);
+				printf("#");
+			}
 		}
 		printf("\n");
 	}
@@ -188,25 +313,87 @@ void Drow(snake_t *snake, frut *frut, direction dir)
 	for(int i = 0;i < WIDTH + 1;i++)    // Нижняя граница
 		printf("#");
 	printf("\n");
-	printf("Eat fruit:%lld",snake->tsize-1);
+	SetConsoleTextAttribute(hwnd, FOREGROUND_RED);
+	printf("Eat fruit snake:%lld",snake->tsize-1);
 	printf("\n");
-	if (dir == PAUSE) 
+	printf("Eat fruit snake2:%lld",snake2->tsize-1);
+	printf("\n");
+	if (dir == PAUSE && dir2 == PAUSE) 
 	{
 	printf("**********PAUSE***********");
 	}
 }
+
+
+	void generateSnakeDirection(snake_t *snake2, direction *dir2, frut frut)
+	{
+	if ((*dir2 == LEFT || *dir2 == RIGHT) && snake2->x == frut.x)
+	{
+	return;
+	}
+	if ((*dir2 == LEFT || *dir2 == RIGHT) && snake2->x != frut.x)
+		{
+			if (frut.y == snake2->y)
+			{
+				if (abs(frut.x + snake2->x) < WIDTH/2) *dir2 = UP;
+				else *dir2 = DOWN;
+			return;
+			}
+		}
+	if ((*dir2 == UP || *dir2 == DOWN) && snake2->y == frut.y)
+	{
+	return;
+	}
+		if ((*dir2 == UP || *dir2 == DOWN)&& snake2->y != frut.y)
+		{
+			if (frut.x == snake2->x)
+			{
+				if (abs(frut.y + snake2->y) < HEIGHT/2) *dir2 = LEFT;
+				else *dir2 = RIGHT;
+			return;
+			}
+		}
+}
+
 int main(int argc, char **argv)
 {
+	int sel;
 	direction dir = LEFT;
+	direction dir2 = LEFT;
+	direction tmp1;
+	direction tmp2;
+	
 	gameOver = 1;
 	snake_t snake = Setup(WIDTH/2,HEIGHT/2,4);
+	snake_t snake2 = Setup(WIDTH - 5,HEIGHT/2,4);
 	frut frut = Frut();
-	while(gameOver)
+	startMenu(&sel);
+	switch(sel)
 	{
-		Drow(&snake,&frut,dir);
-		Input(&dir);
-		Logic(&snake,&frut,dir);
-		Sleep(1000/snake.tsize);    //Скорость
+		case 1:
+		while(gameOver)
+		{
+			Drow(&snake, &snake2, &frut, dir, dir2);
+			Input(&dir,&dir2,&tmp1,&tmp2);
+			generateSnakeDirection(&snake2, &dir2, frut);
+			Logic(&snake,&frut,dir);
+			Logic(&snake2,&frut,dir2);
+			snake.tsize > snake2.tsize ? Sleep(1000/snake.tsize):Sleep(1000/snake2.tsize);    //Скорость
+		}
+		break;
+		
+		case 2:
+		while(gameOver)
+		{
+			Drow(&snake, &snake2, &frut, dir, dir2);
+			InputAuto(&dir,&dir2,&tmp1,&tmp2);
+			generateSnakeDirection(&snake, &dir, frut);
+			generateSnakeDirection(&snake2, &dir2, frut);
+			Logic(&snake,&frut,dir);
+			Logic(&snake2,&frut,dir2);
+			snake.tsize > snake2.tsize ? Sleep(1000/snake.tsize):Sleep(1000/snake2.tsize);    //Скорость
+		}
+		break;
 	}
 	printf("\n");
 	printf("GAME OVER!!!");
